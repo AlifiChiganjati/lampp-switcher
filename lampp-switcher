@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Set environment agar GUI qarma bisa jalan dari root
+export DISPLAY=:0
+export XAUTHORITY="/home/$(logname)/.Xauthority"
+
+# Jalankan ulang pakai pkexec jika belum root
+if [ "$EUID" -ne 0 ]; then
+  exec pkexec "$0" "$@"
+fi
+
+LAMPP_BASE="/opt"
+SYMLINK="$LAMPP_BASE/lampp"
+
+# Ambil daftar versi lampp yang tersedia (kecuali symlink)
+VERSIONS=$(ls -1d "$LAMPP_BASE"/lampp* 2>/dev/null | grep -v "^$SYMLINK$" | sed "s|$LAMPP_BASE/lampp||")
+
+# Tambahkan opsi "Unlink" manual
+CHOICE=$(qarma --title="Pilih Versi LAMPP" --list \
+  --column="Versi Tersedia" \
+  "Unlink (Nonaktifkan LAMPP)" \
+  $VERSIONS)
+
+if [ -z "$CHOICE" ]; then
+  qarma --info --title="LAMPP Switcher" --text="Batal memilih versi."
+  exit 0
+fi
+
+# === OPSI UNLINK ===
+if [ "$CHOICE" = "Unlink (Nonaktifkan LAMPP)" ]; then
+  if [ -L "$SYMLINK" ]; then
+    rm "$SYMLINK"
+    qarma --info --title="LAMPP Switcher" --text="Symlink $SYMLINK berhasil dihapus."
+  else
+    qarma --warning --title="LAMPP Switcher" --text="Symlink tidak ditemukan."
+  fi
+  exit 0
+fi
+
+# === OPSI PILIH VERSI ===
+TARGET="$LAMPP_BASE/lampp$CHOICE"
+
+if [ ! -d "$TARGET" ]; then
+  qarma --error --title="LAMPP Switcher" --text="Versi tidak ditemukan: $TARGET"
+  exit 2
+fi
+
+# Buat ulang symlink
+if ln -sfn "$TARGET" "$SYMLINK"; then
+  qarma --info --title="LAMPP Switcher" --text="Berhasil mengganti ke lampp$CHOICE"
+else
+  qarma --error --title="LAMPP Switcher" --text="Gagal membuat symlink."
+  exit 3
+fi
