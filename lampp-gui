@@ -1,0 +1,28 @@
+#!/bin/sh
+
+LAMPP_BASE="/opt"
+SYMLINK="$LAMPP_BASE/lampp"
+
+echo "== Daftar Versi LAMPP =="
+options=("Unlink (Nonaktifkan LAMPP)")
+for d in "$LAMPP_BASE"/lampp*; do
+  [ "$d" = "$SYMLINK" ] && continue
+  options+=("$(basename "$d" | sed 's/lampp//')")
+done
+
+for idx in "${!options[@]}"; do
+  echo "$((idx+1)). ${options[$idx]}"
+done
+
+read -p "Pilih nomor versi: " choice
+
+# Validasi input angka
+if ! [ "$choice" -ge 1 ] 2>/dev/null || [ "$choice" -gt "${#options[@]}" ]; then
+  echo "Pilihan tidak valid."
+  exit 1
+fi
+
+CHOICE="${options[$((choice-1))]}"
+
+# Jalankan switcher sebagai root
+pkexec /usr/local/bin/lampp-switch "$CHOICE"

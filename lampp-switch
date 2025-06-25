@@ -1,0 +1,49 @@
+#!/bin/sh
+
+LAMPP_BASE="/opt"
+SYMLINK="$LAMPP_BASE/lampp"
+CHOICE="$1"
+
+safe_notify() {
+  echo "[DEBUG] DISPLAY=$DISPLAY"
+  echo "[DEBUG] DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+  if command -v dunstify >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
+    dunstify -a "LAMPP Switcher" "$1" || echo "[ERROR] dunstify gagal"
+  elif command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
+    notify-send "LAMPP Switcher" "$1" || echo "[ERROR] notify-send gagal"
+  else
+    echo "[INFO] $1"
+  fi
+}
+
+if [ -z "$CHOICE" ]; then
+  echo "Tidak ada pilihan versi diberikan."
+  exit 1
+fi
+
+# === OPSI UNLINK ===
+if [ "$CHOICE" = "Unlink (Nonaktifkan LAMPP)" ]; then
+  if [ -L "$SYMLINK" ]; then
+    rm "$SYMLINK"
+    safe_notify "Symlink $SYMLINK berhasil dihapus."
+  else
+    safe_notify "Symlink tidak ditemukan."
+  fi
+  exit 0
+fi
+
+# === OPSI PILIH VERSI ===
+TARGET="$LAMPP_BASE/lampp$CHOICE"
+
+if [ ! -d "$TARGET" ]; then
+  safe_notify "Versi tidak ditemukan: $TARGET"
+  exit 2
+fi
+
+# === BUAT ULANG SYMLINK ===
+if ln -sfn "$TARGET" "$SYMLINK"; then
+  safe_notify "Berhasil mengganti ke lampp$CHOICE"
+else
+  safe_notify "Gagal membuat symlink."
+  exit 3
+fi
