@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=LAMPP Switcher
+Comment=Ganti versi LAMPP yang aktif
+Exec=kitty --class lamppgui -e /usr/local/bin/lampp-gui
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Development;Utility;
+StartupNotify=true
