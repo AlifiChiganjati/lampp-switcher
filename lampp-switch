@@ -5,14 +5,15 @@ SYMLINK="$LAMPP_BASE/lampp"
 CHOICE="$1"
 
 safe_notify() {
-  echo "[DEBUG] DISPLAY=$DISPLAY"
-  echo "[DEBUG] DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-  if command -v dunstify >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
-    dunstify -a "LAMPP Switcher" "$1" || echo "[ERROR] dunstify gagal"
-  elif command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
-    notify-send "LAMPP Switcher" "$1" || echo "[ERROR] notify-send gagal"
-  else
-    echo "[INFO] $1"
+  MESSAGE="$1"
+  echo "$MESSAGE"
+
+  if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    if command -v dunstify >/dev/null 2>&1; then
+      dunstify -a "LAMPP Switcher" "$MESSAGE"
+    elif command -v notify-send >/dev/null 2>&1; then
+      notify-send "LAMPP Switcher" "$MESSAGE"
+    fi
   fi
 }
 
